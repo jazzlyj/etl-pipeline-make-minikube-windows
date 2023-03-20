@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels: 
+    app: etl
+  name: etl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: etl
+  template:
+    metadata:
+      labels:
+        app: etl
+    spec:
+      containers:
+        - env:
+          - name: DATABASE_HOST
+            value: 
+          - name: DATABASE_USER
+            value: 
+          - name: DATABASE_PASSWORD
+            value: 
+          - name: DATABASE_NAME
+            value: 
+          - name: DATABASE_PORT
+            value: 
+          image: localhost:5000/etl
+          name: etl
