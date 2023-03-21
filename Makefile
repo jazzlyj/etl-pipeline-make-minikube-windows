@@ -3,6 +3,7 @@
 .PHONY: create_etl_docker push_etl_docker \
 	install_minikube \
 	create_minikube_cluster check_minikube_cluster \
+	create_secrets \
 	launch_minikube_dashboard \
 	deploy_postgres \
  	enable_docker_registry create_docker_registry \
@@ -27,6 +28,9 @@ install_minikube:
 
 create_minikube_cluster: install_minikube
 	minikube start
+
+create_secrets: 
+	kubectl create secret generic pg-secret --from-env-file=./credentials.txt
 
 check_minikube_cluster: create_minikube_cluster
 	kubectl get service --namespace kube-system
