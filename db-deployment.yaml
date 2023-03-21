@@ -21,11 +21,20 @@ spec:
             - name: PGDATA
               value: /var/lib/postgresql/data
             - name: POSTGRES_DB
-              value: 
+              valueFrom:
+                secretKeyRef:
+                    name: pg-secret
+                    key: DBHost
             - name: POSTGRES_PASSWORD
-              value: 
+              valueFrom:
+                secretKeyRef:
+                    name: pg-secret
+                    key: DBPassword
             - name: POSTGRES_USER
-              value: 
+              valueFrom:
+                secretKeyRef:
+                    name: pg-secret
+                    key: DBUser
           image: postgres
           lifecycle:
             postStart:
