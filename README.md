@@ -409,64 +409,219 @@ status:
 
 6. Install and setup a Docker registry to store created docker images 
 
-Minikube has a native capability to create a registry to store container images.
+    Minikube has a native capability to create a registry to store container images.
 
-It also simplifies the setup and configuration required for the end user so that the reqistry and its network are able to communicate the the K8s networks.
+    It also simplifies the setup and configuration required for the end user so that the reqistry and its network are able to communicate with the K8s networks.
 
-If docker desktop or KIND were used there would be additional configuration required.
+    Docker desktop or KIND would require additional configuration.
 
-In this step:
-* Configure Minikube with the docker registry plugin  
-* Pull the image and run the docker registry container
-* Check to make sure the registry is up and running
-* Enable port forwarding so images can be pushed to this local registry
-
+    In this step:
+    * Configure Minikube with the docker registry plugin  
+    * Pull the image and run the docker registry container
+    * Check to make sure the registry is up and running
+    * Enable port forwarding so images can be pushed to this local registry
+    
 <br>
 
 * The make target contents:
 
-The make target of *enable_docker_registry_port_forward* has a dependency of the target *enable_docker_registry*. Again giving a convenient way two perform steps in one command.
-
-```makefile
-enable_docker_registry:
-	minikube addons enable registry 
-	kubectl get service --namespace kube-system
-
-enable_docker_registry_port_forward: create_docker_registry
-	kubectl port-forward --namespace kube-system service/registry 5000:80
-```
-
+    * The make target of *enable_docker_registry_port_forward* has a dependency of the target *enable_docker_registry*. Again giving a convenient way two perform steps in one command.
+    ```makefile
+    enable_docker_registry:
+    	minikube addons enable registry 
+    	kubectl get service --namespace kube-system
+    
+    enable_docker_registry_port_forward: create_docker_registry
+    	kubectl port-forward --namespace kube-system service/registry 5000:80
+    ```
+    
 <br>
 
 * Run the make target:
-```powershell
-cd c:\src\etl-pipeline-make-minikube-windows
-make enable_docker_registry_port_forward
-```
-
+    ```powershell
+    cd c:\src\etl-pipeline-make-minikube-windows
+    make enable_docker_registry_port_forward
+    ```
+    
 <br>
 
 
 * What it looks like:
 
-![enable_docker_registry_port_forward](./images/enable_docker_registry_port_forward.png)
+    ![enable_docker_registry_port_forward](./images/enable_docker_registry_port_forward.png)
 
 
 <br>
 
 
 <br>
+7. Build the ETL docker container image, push the image to the registry, and deploy the image to the K8s cluster
+
+In this step:
+* Build the "etl" docker image and tag it
+  * [12 factor app](https://12factor.net) software design default practices number 3 (store config in the env) as well as [SOLID](https://en.wikipedia.org/wiki/SOLID) principles, *Dependency Inversion Principle*. 
+  Env vars (config) are injected by importing *connector.py* and a higher level function uses lower level components (the various database connections and other interfaces). 
+  Arguably SOLID principle, *Interface Segregation* and *Single Responsibility* are employed
+* Push the "etl" docker image to the local docker registry
+* Confirm the image is present in the registry
+
+
+etl dockerfile:
+
+```dockerfile
+FROM python:3.10.9-buster
+ADD . /app
+WORKDIR /app
+RUN pip install -r requirements.txt
+CMD ["python", "etl.py"]
+```
+
+
+
 
 
 <br>
+
+* The make target contents:
+    * The make target of *create_etl_docker* has a dependency of the target *push_etl_docker*. Again giving a convenient way two perform steps in one command.
+
+    ```makefile
+    create_etl_docker:
+    	docker build -t etl .
+    	docker tag etl localhost:5000/etl
+    
+    push_etl_docker: create_etl_docker
+    	docker push localhost:5000/etl
+    	curl http://localhost:5000/v2/_catalog
+    ```
+    
+
+
+<br>
+
+* Run the make target:
+    ```powershell
+    cd c:\src\etl-pipeline-make-minikube-windows
+    make push_etl_docker
+    ```
+    
+<br>
+
+* What it looks like:
+
+    ![push_etl_docker](./images/push_etl_docker.png)
+
+
+
+
+<br>
+
+
+<br>
+8. Deploy etl docker container
+
+In this step :
+* Deploy the etl application in K8s
+
+
+etl-deployment.yaml:
+
+NOTE: the image config item telling K8s where to find the docker container image to start. As well as the env vars using the secret (pg-secret) needed to interface with the PG DB server.
+
+```yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels: 
+    app: etl
+  name: etl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: etl
+  template:
+    metadata:
+      labels:
+        app: etl
+    spec:
+      containers:
+        - env:
+          - name: DATABASE_HOST
+            valueFrom:
+              secretKeyRef:
+                name: pg-secret
+                key: DBHost
+          - name: DATABASE_USER
+            valueFrom:
+              secretKeyRef:
+                name: pg-secret
+                key: DBUser
+          - name: DATABASE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: pg-secret
+                key: DBPassword
+          - name: DATABASE_NAME
+            valueFrom:
+              secretKeyRef:
+                name: pg-secret
+                key: DBSchema
+          - name: DATABASE_PORT
+            valueFrom:
+              secretKeyRef:
+                name: pg-secret
+                key: DBPort
+          resources: {}  
+          image: localhost:5000/etl
+          name: etl
+```
+
+
+
+<br>
+
+* The make target contents:
+    ```makefile
+    deploy_etl_docker:
+    	kubectl apply -f etl-deployment.yaml
+    ```
+    
+
+
+<br>
+
+* Run the make target:
+    ```powershell
+    make deploy_etl_docker
+    ```
+    
+<br>
+
+
+* What it looks like:
+
+    ![deploy_etl_docker](./images/deploy_etl_docker.png)
+
+<br>
+
+<br>
+
+<br>
+
+
+
+
 
 99. Tear down and cleanup; remove all parts of the infrastructure
 
 * Run the make target
-```powershell
-make delete_minikube_cluster
-```
-
+    ```powershell
+    make delete_minikube_cluster
+    ```
+    
+<br>
+<br>
 
 ## Built With
 
@@ -478,12 +633,15 @@ make delete_minikube_cluster
 * [Python](https://www.python.org/) - Python programming language
 
 
-
+<br>
+<br>
 
 ## Authors
 
 [Jay Lavine](https://github.com/jazzlyj)
 
+<br>
+<br>
 
 ## Acknowledgments
 

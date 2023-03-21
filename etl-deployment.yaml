@@ -17,14 +17,30 @@ spec:
       containers:
         - env:
           - name: DATABASE_HOST
-            value: 
+            valueFrom:
+              secretKeyRef:
+                name: pg-secret
+                key: DBHost
           - name: DATABASE_USER
-            value: 
+            valueFrom:
+              secretKeyRef:
+                name: pg-secret
+                key: DBUser
           - name: DATABASE_PASSWORD
-            value: 
+            valueFrom:
+              secretKeyRef:
+                name: pg-secret
+                key: DBPassword
           - name: DATABASE_NAME
-            value: 
+            valueFrom:
+              secretKeyRef:
+                name: pg-secret
+                key: DBSchema
           - name: DATABASE_PORT
-            value: 
+            valueFrom:
+              secretKeyRef:
+                name: pg-secret
+                key: DBPort
+          resources: {}  
           image: localhost:5000/etl
           name: etl
