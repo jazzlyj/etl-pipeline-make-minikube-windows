@@ -2,4 +2,4 @@
 *.md
 *.env
 Makefile
-*.txt
+credentials.txt
