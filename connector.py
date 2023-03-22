@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import numpy as np
+import pandas as pd
 
 import psycopg2
 import psycopg2.extras as extras
@@ -36,10 +38,12 @@ def pg_load(conn, query, df, page_size=100):
     Using psycopg2.extras.execute_batch() to load the data into the database 
     """
     tuples = [tuple(x) for x in df.to_numpy()]
-    query = query
+    print(tuples)
+    qry = query
+    print(qry)
     cursor = conn.cursor()
     try:
-        extras.execute_batch(cursor, query, tuples, page_size)
+        extras.execute_batch(cursor, qry, tuples, page_size)
         conn.commit()
         print("Loaded: Uploaded data; pg_load() done.")
     except (Exception, psycopg2.DatabaseError) as error:

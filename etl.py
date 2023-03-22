@@ -6,7 +6,7 @@ from pytz import timezone
 # ETL libs
 import extract as ext
 import transform as xform
-import load
+import load as l
 
 
 def main():
@@ -20,7 +20,7 @@ def main():
         dfe = ext.extract()
         dft = xform.transform(dfe)
         print(dft)
-        load.load(dft)
+        l.load(dft)
         print("ETL ran and uploaded the data")
         # go to sleep for 1 day - runtime (run the next day)
         end_time = dt.datetime.now(tz).timestamp()

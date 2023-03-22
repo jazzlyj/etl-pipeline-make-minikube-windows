@@ -16,4 +16,6 @@ def load(df):
     """
 
     pgconn = etlfns.pg_conn()
+    print(load_qs)
+    print(df.tail())
     etlfns.pg_load(pgconn, load_qs, df, page_size=100)
