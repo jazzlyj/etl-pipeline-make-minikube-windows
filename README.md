@@ -205,6 +205,7 @@ In this step:
 * Examine secrets with the command
     ```bash
     kubectl get secret pg-secret -o yaml
+    #
     apiVersion: v1
     data:
       DBHost: --------
@@ -428,11 +429,14 @@ status:
     * The make target of *enable_docker_registry_port_forward* has a dependency of the target *enable_docker_registry*. Again giving a convenient way two perform steps in one command.
     ```makefile
     enable_docker_registry:
-    	minikube addons enable registry 
-    	kubectl get service --namespace kube-system
-    
+	        minikube addons enable registry 
+	        kubectl get service --namespace kube-system
+
+    create_docker_registry: enable_docker_registry
+	        docker run -d --network=host alpine ash -c "apk add socat && socat TCP-LISTEN:5000,reuseaddr,fork TCP:host.docker.internal:5000"
+
     enable_docker_registry_port_forward: create_docker_registry
-    	kubectl port-forward --namespace kube-system service/registry 5000:80
+	        kubectl port-forward --namespace kube-system service/registry 5000:80
     ```
     
 <br>
@@ -603,12 +607,44 @@ spec:
 
     ![deploy_etl_docker](./images/deploy_etl_docker.png)
 
-<br>
+    ![etl_deployment](./images/etl_deployment.png)
 
 <br>
 
 <br>
 
+<br>
+
+9. Confirmation that the ETL ran and there is data in the database
+
+In this step:
+
+Use the minikube dashboard launched in step 5 to: 
+* Under Workloads - > Pods, look at the "db" pod running, select the 3 veritcal dots to open a menu then select Logs. 
+Stdout will show that the ETL ran and uploaded data.
+
+ ![pg_log](./images/pg_log.png)
+
+<br>
+
+* Under Workloads - > Pods, look at "db" pod running, select the 3 veritcal dots to open a menu then"
+    * select the "Exec" option to open a shell on the pod 
+    * connect to the PG default DB  
+    * return all results in the gendercounts table.
+
+* Run these commands (from the exec-ed shell)
+```bash
+psql -w -d $POSTGRES_DB -U $POSTGRES_USER
+
+SELECT * FROM public.gendercounts;
+```
+
+    ![confirm_db_has_records](./images/confirm_db_has_records.png)
+
+<br>
+
+
+<br>
 
 
 
