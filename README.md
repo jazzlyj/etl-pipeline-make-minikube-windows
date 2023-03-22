@@ -166,6 +166,7 @@ make create_minikube_cluster
     DBPassword=
     DBPort=
     DBSchema=
+    DBName=
     ```
     Be sure to set the values 
       
@@ -213,6 +214,7 @@ In this step:
       DBPort: ---------
       DBSchema: ---------
       DBUser: ----------
+      DBName: ----------
     kind: Secret
     metadata:
       creationTimestamp: "2023-03-21T04:25:28Z"
@@ -620,12 +622,6 @@ spec:
 In this step:
 
 Use the minikube dashboard launched in step 5 to: 
-* Under Workloads - > Pods, look at the "db" pod running, select the 3 veritcal dots to open a menu then select Logs. 
-Stdout will show that the ETL ran and uploaded data.
-
- ![pg_log](./images/pg_log.png)
-
-<br>
 
 * Under Workloads - > Pods, look at "db" pod running, select the 3 veritcal dots to open a menu then"
     * select the "Exec" option to open a shell on the pod 
@@ -633,13 +629,26 @@ Stdout will show that the ETL ran and uploaded data.
     * return all results in the gendercounts table.
 
 * Run these commands (from the exec-ed shell)
-```bash
-psql -w -d $POSTGRES_DB -U $POSTGRES_USER
+    ```bash
+    psql -w -d $POSTGRES_DB -U $POSTGRES_USER
+    
+    db=# \c db
+    
+    db=# select * from gendercounts;
+     id |   gender    | count 
+    ----+-------------+-------
+      2 | Agender     |   120
+      3 | Bigender    |   119
+      4 | Female      |   131
+      5 | Genderfluid |   140
+      6 | Genderqueer |   130
+      7 | Male        |   129
+      8 | Non-binary  |   113
+      9 | Polygender  |   118
+    (9 rows)      
+    ```
 
-SELECT * FROM public.gendercounts;
-```
-
-    ![confirm_db_has_records](./images/confirm_db_has_records.png)
+    ![pg_confirm_db_has_records](./images/pg_exec_shell.png)
 
 <br>
 
