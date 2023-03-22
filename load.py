@@ -7,7 +7,7 @@ def load(df):
     """
 
     load_qs = """
-    INSERT INTO db."gendercounts" (
+    INSERT INTO public."gendercounts" (
         "gender", "count"
         )
     VALUES (
