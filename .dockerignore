@@ -3,3 +3,5 @@
 *.env
 Makefile
 credentials.txt
+images/
+DATASET.csv
