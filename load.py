@@ -7,7 +7,7 @@ def load(df):
     """
 
     load_qs = """
-    INSERT INTO db."gendercounts" (
+    INSERT INTO postgres."gendercounts" (
         "gender", "count"
         )
     VALUES (
@@ -16,5 +16,4 @@ def load(df):
     """
 
     pgconn = etlfns.pg_conn()
-    print(df.tail())
     etlfns.pg_load(pgconn, load_qs, df, page_size=100)
