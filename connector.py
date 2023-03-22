@@ -29,7 +29,6 @@ def pg_conn():
         return pgconn
     except (Exception, psycopg2.DatabaseError) as error:
         print(error)
-        return 1
 
 
 def pg_load(conn, query, df, page_size=100):
@@ -37,15 +36,16 @@ def pg_load(conn, query, df, page_size=100):
     Using psycopg2.extras.execute_batch() to load the data into the database 
     """
     tuples = [tuple(x) for x in df.to_numpy()]
-    qry = query
+    query = query
     cursor = conn.cursor()
     try:
-        extras.execute_batch(cursor, qry, tuples, page_size)
+        extras.execute_batch(cursor, query, tuples, page_size)
         conn.commit()
         print("Loaded: Uploaded data; pg_load() done.")
     except (Exception, psycopg2.DatabaseError) as error:
         print("Error: %s" % error)
         conn.rollback()
         cursor.close()
+        return 1
     cursor.close()
     conn.close()
