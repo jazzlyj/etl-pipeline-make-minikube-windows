@@ -570,7 +570,7 @@ spec:
             valueFrom:
               secretKeyRef:
                 name: pg-secret
-                key: DBSchema
+                key: DBName
           - name: DATABASE_PORT
             valueFrom:
               secretKeyRef:

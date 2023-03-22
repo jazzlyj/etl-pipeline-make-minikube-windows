@@ -35,12 +35,11 @@ spec:
             valueFrom:
               secretKeyRef:
                 name: pg-secret
-                key: DBSchema
+                key: DBName
           - name: DATABASE_PORT
             valueFrom:
               secretKeyRef:
                 name: pg-secret
                 key: DBPort
-          resources: {}  
           image: localhost:5000/etl
           name: etl
